@@ -1,0 +1,4 @@
+1.git add -all   gaa
+2.git commit -m "xxxx" gc
+3.git pull    gl
+4.git push    gp
