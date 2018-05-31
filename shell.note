@@ -14,8 +14,21 @@
 touch 主要是用来更新时间的....
 使用cat连接两个文件
 ln -s 源文件 快捷方式 s表示链接
-有多个命令就使用;号,若将输出全都重定向用{}扩起来
+有多个命令就使用;号,若将输出全都重定向用{}扩起来,{}是父shell,()是子shell
 read读到换行符为止,所以就使用循环可以将文件读完,不然好像只能读一行
 黑洞/dev/null 了解一下-.-
 cp mv rm 加上-i 进行确认
 `command` == $(command)
+read file 是要求用户输入并且保存到file变量中...
+read -p "" ver 就像scanf一样..(我下所的)
+readonly xxx=1 或者readonly xxx(已定义) 表示只读无法改变包括unset
+用重定向代替输入
+shell中0给了stdin 1给了stdout 2给了stderr
+其余数字可以来关联输出文件 例如文件中>&3 命令用3>文件 输出到文件中
+exec 将文件关联
+paste 两个文件连接
+tr替换
+if空格[] while空格:
+expand unexpand 将tab 转换成空格 一般只早开头 使用-a 替换全部
+unset 消除定义的变量
+${array[*]} == ${array[@]} ""${array[*]}  != "${array[@]}"前面是整个数组的字符串,后面时整个数组
