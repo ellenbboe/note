@@ -2,3 +2,4 @@
 2.git commit -m "xxxx" gc
 3.git pull    gl
 4.git push    gp
+git config --global credential.helper store 自动密码
