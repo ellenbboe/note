@@ -32,3 +32,24 @@ if空格[] while空格:
 expand unexpand 将tab 转换成空格 一般只早开头 使用-a 替换全部
 unset 消除定义的变量
 ${array[*]} == ${array[@]} ""${array[*]}  != "${array[@]}"前面是整个数组的字符串,后面时整个数组
+条件语句if or elif 后面要跟上 then 如:
+if [ xx ]
+then
+    xxxxx
+elif [ xxx ]
+then
+    xxxxx
+fi
+[  ]是shell的内置命令 下列给出操作符:
+-eq equal to
+-ne not equal to
+-lt less than
+-gt great than
+ge (没有-哦) great or equal 
+如果条件判断与then写在统一行then前面加;
+[]两侧要有空格
+在case中 中止case语句用;;如果用;& or ;;&来终止还是执行下去,他中止的是子句,会使用word在去匹配pattern,直到遇到;;结束case
+递增可以使用let x=$x+1 当然也可以使用expr语句-.-我也是随机选择的....
+do 和while [  ]写在一起的时候do前面有分号
+while 后面可以加上命令list 使用分号;来隔开,决定是否推出循环的是最后一个命令返回值,注意是最后一个!!!
+其中命令都是用[]扩起来的列入[];[];[]
