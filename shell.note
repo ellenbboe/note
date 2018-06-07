@@ -53,3 +53,41 @@ ge (没有-哦) great or equal
 do 和while [  ]写在一起的时候do前面有分号
 while 后面可以加上命令list 使用分号;来隔开,决定是否推出循环的是最后一个命令返回值,注意是最后一个!!!
 其中命令都是用[]扩起来的列入[];[];[]
+没有依赖的包 pacman -Qtd 出来的包不能删,我删了出现了乱码
+[] 是条件 
+-n String 判断字符串长度是否非0
+-z Stirng 判断字符串长度为0时就断(zero)
+String=String
+String!=String
+for 后面不加in就选择传入的参数
+同时也可以写的像c的for一样但是写成要这样
+for((p=1,k=321;p<10;p++,k++))
+do
+    xxxxx
+done
+
+
+select var in xxx xxx xxx xxx
+do
+    xxxx(可以是case或者是if条件判断)
+done
+在select中要写退出循环的条件,不然会一直循环下去,还有就是要写其他选项的条件,不然不科学-.-
+option 参数的代码
+while getopts x:x:x: OPTION 这个option可以随便定义
+do
+    case $OPTION in
+        x)
+            xxx=$OPTAGE;; 这个变量时规定的 与$REPLY一样
+done
+写的函数可以直接调用 条件中-r 可读 -w 可写 -a and
+${xx:-dsa}等:(也可以通过其他方式来实现)
+    :-先默认后赋值,不改变
+    :+先赋值,不改变
+    :=改变
+    :?若是空的则输出错误退出脚本
+$PAGER 似乎是系统变量 显示文档的less也可以通过其他方式来实现
+echo -n 不换行输出 -e 激活转移字符
+sort -u 忽略相同行
+当不能使用管道时可以使用命令替代参数
+数字或者字符串expression不能出现在$()中,要用()扩起来后在放到$()中间......
+循环的话要注意变量的赋值
