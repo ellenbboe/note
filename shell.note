@@ -104,3 +104,5 @@ dd if=file of=file count=blocks bs=bytes
 使用'' 或者: 是屏蔽中断INT信号
 使用trap INT 来恢复
 exit xx 中xx是信号
+kill 进程的时候要先kill掉子进程,不然会交给init进程接管
+使用&&连接多个命令的时候是一个一个执行的,会创建子bash执行进程
