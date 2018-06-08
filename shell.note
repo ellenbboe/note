@@ -91,3 +91,16 @@ sort -u 忽略相同行
 当不能使用管道时可以使用命令替代参数
 数字或者字符串expression不能出现在$()中,要用()扩起来后在放到$()中间......
 循环的话要注意变量的赋值
+find 命令 从给定的文件位置开始找 -iname 忽略大小写
+-mtime 表示修改时间 -mtime n修改时间为n天
+-mtime +n 大于n天
+-mtime -n 小于n天 
+如果有多个命令使用-a来连接 其中如果有()要使用\ 来转义 -o 或者
+xargs 可以处理很多参数
+locate 查询本地的数据库 find是直接查找文件系统
+dd if=file of=file count=blocks bs=bytes
+通过trap xx(函数名) 数字 可以将让函数才该信号出现的时候调用该函数
+使用trap也可以脚本结束后调用函数,数字是0
+使用'' 或者: 是屏蔽中断INT信号
+使用trap INT 来恢复
+exit xx 中xx是信号
