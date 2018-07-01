@@ -106,3 +106,30 @@ dd if=file of=file count=blocks bs=bytes
 exit xx 中xx是信号
 kill 进程的时候要先kill掉子进程,不然会交给init进程接管
 使用&&连接多个命令的时候是一个一个执行的,会创建子bash执行进程
+sed stream editor 可以从管道或者文件中读取参数
+command|sed 'command'
+sed 'command' file
+使用;分号来连接多个command(不用另起'') 或者使用-e(要''分离每个命令)
+也可以将多个command写在一个文件中,-f指定文件
+!可以对取值范围取反
+sed -n '1~2p' 1 start  2 step
+sed还能加上正则/^$/
+使用正则还能代替行号
+使用&表示正则表达式获取的结果
+awk 'script' files
+'script' 中一般为
+    /pattern/{action}
+    exprssion {action}其中特殊的有: value ~ /pattern/ 与正则匹配 加个!就是不匹配  可以使用()将判断分离,这样()间可以使用||或者&&链接
+
+分割符通过-F指定
+可以在awk文件中写好命令之后使用-f来指定文件
+使用BEGIN{
+
+}来执行处理数据之前执行的初始化操作
+使用next来表示 将两个命令的结果连接起来
+#!/bin/bash/awk -f awk脚本 .awk
+awk中有内建变量
+    NR为行数
+    FS分割符
+    等等
+
