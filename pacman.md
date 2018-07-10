@@ -1,4 +1,3 @@
-pacman:
     pacman -D --asexplicite xxx 设置为单独安装的包
     pacman -Qtd 出来的包可以删 但有些删除可能会有影响,大多没用
     pacman -Rscn 可以删除干净包
@@ -14,18 +13,10 @@ pacman:
     如果是用Rdd卸载b就是不管谁依赖它就是强行把b一个东西删掉，
     本质上是临时破坏一下依赖。这个做法往往是出了什么问题才会用的。
     卸载同时删配置文件的参数是-n，-c的意思是同时把依赖它的包也卸载掉
-    总结一下，对于a-b-c这样一条依赖树且a和b都是作为依赖安装的，
+
+**总结一下**
+
+    对于a-b-c这样一条依赖树且a和b都是作为依赖安装的，
     那么如果使用-R、-Rs去卸载b就会报错提示c的依赖被破坏并中断操作，
     使用-Rdd卸载b就会强行删b，同时a和c被保留。
     使用-Rc卸b就会把b和c卸载掉，用-Rsc卸b就会把abc全卸掉
-
-降级:
-    使用downgrade降级程序
-    先要在/etc/pacman.conf添加
-    [archlinuxfr]
-    SigLevel = Never
-    Server = 
-    http://repo.archlinux.fr/$arch
-
-    之后使用-Sy来更新仓库
-    安装downgrade
