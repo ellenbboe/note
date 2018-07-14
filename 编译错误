@@ -1,0 +1,15 @@
+
+#### 编译gcc出现错误:
+```
+In file included from ../../gcc-4.9.2/gcc/cp/except.c:1013:
+cfns.gperf:101:1: error: 'const char* libc_name_p(const char*, unsigned int)' redeclared inline with 'gnu_inline' attribute
+cfns.gperf:26:14: note: 'const char* libc_name_p(const char*, unsigned int)' previously declared here
+cfns.gperf:26:14: warning: inline function 'const char* libc_name_p(const char*, unsigned int)' used but never defined
+make[2]: *** [Makefile:1058: cp/except.o] Error 1
+make[2]: Leaving directory '/mnt/lfs/sources/gcc-build/gcc'
+make[1]: *** [Makefile:4027: install-gcc] Error 2
+make[1]: Leaving directory '/mnt/lfs/sources/gcc-build'
+make: *** [Makefile:2176: install] Error 2
+```
+** 原因 **:
+> 编译用的gcc版本太高

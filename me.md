@@ -1,4 +1,4 @@
-<blockquote class="blockquote-center">一切的追求都是为了生活</blockquote>
+
 ## 个人信息
 > 昵称: 兔子春
 性别: 男
@@ -32,7 +32,7 @@
 
 ![红A](https://gss3.bdstatic.com/7Po3dSag_xI4khGkpoWK1HF6hhy/baike/w%3D268%3Bg%3D0/sign=ea20cf5c59da81cb4ee684cb6a5db72b/e850352ac65c1038140de96aba119313b07e8922.jpg)
 
-### 座左铭(滑稽)
+### 座右铭
 > 没有什么特定的语句,也就是一步一步向着生活走下去吧.
 
 ![](https://timgsa.baidu.com/timg?image&quality=80&size=b9999_10000&sec=1531224521956&di=fb0c6eb38b1fff29ba51dd5e2677f341&imgtype=0&src=http%3A%2F%2Fwww.xz7.com%2Fup%2F2017-9%2F15066494383398008.jpg)
@@ -41,3 +41,24 @@
 > 基础技能点尚未点满,望同志继续努力,详见github.
 
   ![](https://ss1.bdstatic.com/70cFuXSh_Q1YnxGkpoWK1HF6hhy/it/u=3054556271,1849999498&fm=27&gp=0.jpg)
+
+### 学习计划
+- [ ] 构建lfs系统
+- [ ] 深入linux操作系统
+- [ ] 熟悉区块链
+- [ ] 学习搜索引擎
+- [ ] 写一个爬火车票的脚本
+- [ ] 学习汉诺塔的两种写法
+- [ ] 学习vim
+
+### 其他计划
+- [x] 获得省级荣誉
+- [ ] 获得市级荣誉
+- [ ] 获得全国荣誉
+- [ ] 获得全球荣誉
+- [ ] 买一个树莓派
+- [x] 4级英语
+- [ ] 6级英语
+- [ ] 熟练与外国人交流
+- [ ] 拳皇连招
+- [x] 搭建一个博客系统
