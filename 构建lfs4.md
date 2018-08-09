@@ -1,4 +1,4 @@
-### 安装基本系统软件过程
+### 安装基本系统软件过程(重点过程)
 部分在中文版中没有,取自英文版
 #### Linux-4.15.3 API Headers
 Linux API 头文件（在 linux-3.19.tar.xz 里）会将内核 API 导出给 Glibc 使用。
@@ -427,3 +427,298 @@ Ensure that all 190 tests in the test suite passed.
             --docdir=/usr/share/doc/gmp-6.1.2
 ```
 #### MPFR-4.0.1
+编译:
+```
+./configure --prefix=/usr        \
+            --disable-static     \
+            --enable-thread-safe \
+            --docdir=/usr/share/doc/mpfr-4.0.1
+```
+#### MPC-1.1.0
+编译:
+```
+./configure --prefix=/usr    \
+            --disable-static \
+            --docdir=/usr/share/doc/mpc-1.1.0
+```
+#### GCC-7.3.0
+If building on x86_64, change the default directory name for 64-bit libraries to “lib”:
+```
+case $(uname -m) in
+  x86_64)
+    sed -e '/m64=/s/lib64/lib/' \
+        -i.orig gcc/config/i386/t-linux64
+  ;;
+esac
+```
+
+Remove the symlink created earlier as the final gcc includes will be installed here:
+`rm -f /usr/lib/gcc`
+
+编译:
+```
+SED=sed                               \
+../configure --prefix=/usr            \
+             --enable-languages=c,c++ \
+             --disable-multilib       \
+             --disable-bootstrap      \
+             --with-system-zlib
+```
+
+`SED=sed`
+Setting this environment variable prevents a hard-coded path to /tools/bin/sed.
+
+`--with-system-zlib`
+This switch tells GCC to link to the system installed copy of the Zlib library, rather than its own internal copy.
+
+One set of tests in the GCC test suite is known to exhaust the stack, so increase the stack size prior to running the tests:
+(一个测试会用尽tests,需要扩大栈的容量)
+`ulimit -s 32768`
+一些意料之外的错误总是难以避免。GCC 开发者通常意识到了这些问题，但还没有解决。除非测试结果和上面 URL 中的相差很大，不然就可以安全继续。
+
+>On some combinations of kernel configuration and AMD processors there may be more than 1100 failures in the gcc.target/i386/mpx tests (which are designed to test the MPX option on recent Intel processors). These can safely be ignored on AMD processors.
+我表示震惊....
+
+一些软件包希望 GCC 安装在 /lib 目录。为了支持那些软件包，可以建立一个符号链接：
+
+`ln -sv ../usr/bin/cpp /lib`
+译者注：如果还在 gcc-build 目录，这里应该是 `ln -sv ../../usr/bin/cpp /lib` 。
+很多软件包用命令 cc 调用 C 编译器。为了满足这些软件包，创建一个符号链接：
+`ln -sv gcc /usr/bin/cc`
+
+增加一个兼容符号链接启用编译程序时进行链接时间优化（Link Time Optimization，LTO）：
+```
+install -v -dm755 /usr/lib/bfd-plugins
+ln -sfv ../../libexec/gcc/$(gcc -dumpmachine)/7.3.0/liblto_plugin.so \
+        /usr/lib/bfd-plugins/
+```
+然后进行检验(步骤省略)
+最后，移动位置放错的文件：
+```
+mkdir -pv /usr/share/gdb/auto-load/usr/lib
+mv -v /usr/lib/*gdb.py /usr/share/gdb/auto-load/usr/lib
+```
+#### Bzip2-1.0.6
+`Bzip2` 软件包包含压缩和解压缩的程序。用 `bzip2` 压缩文本文件能获得比传统的 `gzip` 更好的压缩比。
+使用能为这个软件包安装帮助文档的补丁：
+`patch -Np1 -i ../bzip2-1.0.6-install_docs-1.patch`
+
+下面的命令确保安装的符号链接是相对链接：
+`sed -i 's@\(ln -s -f \)$(PREFIX)/bin/@\1@' Makefile`
+
+确认 man 页面安装到了正确的位置：
+`sed -i "s@(PREFIX)/man@(PREFIX)/share/man@g" Makefile`
+
+编译:
+```
+make -f Makefile-libbz2_so
+make clean
+```
+`-f Makefile-libbz2_so`
+这会使用不同的 Makefile 文件编译 `Bzip2`，在这里是 `Makefile-libbz2_so`，它会创建动态 `libbz2.so` 库，并把它链接到 `Bzip2` 工具。
+
+安装使用动态链接库的 `bzip2` 二进制文件到 `/bin` 目录， 创建一些必须的符号链接并清理：
+```
+cp -v bzip2-shared /bin/bzip2
+cp -av libbz2.so* /lib
+ln -sv ../../lib/libbz2.so.1.0 /usr/lib/libbz2.so
+rm -v /usr/bin/{bunzip2,bzcat,bzip2}
+ln -sv bzip2 /bin/bunzip2
+ln -sv bzip2 /bin/bzcat
+```
+#### Pkg-config-0.29.2
+pkg-config 软件包包含一个在配置和 make 文件运行时把 include 路径和库路径传递给编译工具的工具。
+```
+./configure --prefix=/usr              \
+            --with-internal-glib       \
+            --disable-host-tool        \
+            --docdir=/usr/share/doc/pkg-config-0.29.2
+```
+`--with-internal-glib`
+这会让 pkg-config 使用它自己内部版本的 Glib，因为在 LFS 中没有可用的外部版本。
+
+`--disable-host-tool`
+这个选项取消创建到 pkg-config 程序的不必要的硬链接。
+#### Ncurses-6.1
+Ncurses 软件包包含用于不依赖于特定终端的字符屏幕处理的库。
+Don't install a static library that is not handled by configure:
+`sed -i '/LIBTOOL_INSTALL/d' c++/Makefile.in`
+
+编译:
+```
+./configure --prefix=/usr           \
+            --mandir=/usr/share/man \
+            --with-shared           \
+            --without-debug         \
+            --without-normal        \
+            --enable-pc-files       \
+            --enable-widec
+```
+`--enable-widec`
+这个选项会编译宽字符库（例如 libncursesw.so.5.9）而不是常规的）例如 libncurses.so.5.9）。宽字符库可用于多字节和传统的 8 位本地字符， 而常规的库只能用于 8 位本地字符。宽字符库和常规的库是源文件兼容的，而不是二进制文件兼容的。
+
+`--enable-pc-files`
+该选项为 pkg-config 生成和安装 .pc 文件。
+
+`--without-normal`
+该选项取消生成与安装静态库
+
+Move the shared libraries to the /lib directory, where they are expected to reside(转移库文件):
+`mv -v /usr/lib/libncursesw.so.6* /lib`
+
+Because the libraries have been moved, one symlink points to a non-existent file. Recreate it(重新链接库文件):
+`ln -sfv ../../lib/$(readlink /usr/lib/libncursesw.so) /usr/lib/libncursesw.so`
+
+很多应用程序仍然希望编辑器能找到非宽字符的 Ncurses 库。通过符号链接和链接器脚本欺骗这样的应用链接到宽字符库：
+```
+for lib in ncurses form panel menu ; do
+    rm -vf                    /usr/lib/lib${lib}.so
+    echo "INPUT(-l${lib}w)" > /usr/lib/lib${lib}.so
+    ln -sfv ${lib}w.pc        /usr/lib/pkgconfig/${lib}.pc
+done
+```
+最后，确保在编译时会查找 -lcurses 的旧应用程序仍然可以编译：
+
+```
+rm -vf                     /usr/lib/libcursesw.so
+echo "INPUT(-lncursesw)" > /usr/lib/libcursesw.so
+ln -sfv libncurses.so      /usr/lib/libcurses.so
+```
+**注意**
+上面的指令并**不会创建**非宽字符 `Ncurses` 库，因为_没有从源文件中编译安装的软件包会在运行时链接它们_。如果你由于一些仅有二进制的应用程序或要和 `LSB` 兼容而必须要有这样的库，用下面的命令重新编译软件包：
+```
+make distclean
+./configure --prefix=/usr    \
+            --with-shared    \
+            --without-normal \
+            --without-debug  \
+            --without-cxx-binding \
+            --with-abi-version=5
+make sources libs
+cp -av lib/lib*.so.5* /usr/lib
+```
+#### Attr-2.4.47
+attr 软件包包含管理文件系统对象的扩展属性的工具。
+Modify the documentation directory so that it is a versioned directory:
+`sed -i -e 's|/@pkg_name@|&-@pkg_version@|' include/builddefs.in`
+
+Prevent installation of manual pages that were already installed by the man pages package:
+`sed -i -e "/SUBDIRS/s|man[25]||g" man/Makefile`
+
+Fix a problem in the test procedures caused by changes in perl-5.26:
+(修复问题)
+`sed -i 's:{(:\\{(:' test/run`
+
+```
+./configure --prefix=/usr \
+            --bindir=/bin \
+            --disable-static
+```
+
+The shared library needs to be moved to /lib, and as a result the .so file in /usr/lib will need to be recreated:
+`mv -v /usr/lib/libattr.so.* /lib`
+`ln -sfv ../../lib/$(readlink /usr/lib/libattr.so) /usr/lib/libattr.so`
+
+#### Acl-2.2.52
+
+Modify the documentation directory so that it is a versioned directory:
+
+`sed -i -e 's|/@pkg_name@|&-@pkg_version@|' include/builddefs.in`
+Fix some broken tests:
+
+`sed -i "s:| sed.*::g" test/{sbits-restore,cp,misc}.test`
+Fix a problem in the test procedures caused by changes in perl-5.26:
+
+`sed -i 's/{(/\\{(/' test/run`
+Additionally, fix a bug that causes getfacl -e to segfault on overly long group name:
+```
+sed -i -e "/TABS-1;/a if (x > (TABS-1)) x = (TABS-1);" \
+    libacl/__acl_to_any_text.c
+    ```
+Prepare Acl for compilation:
+```
+./configure --prefix=/usr    \
+            --bindir=/bin    \
+            --disable-static \
+            --libexecdir=/usr/lib
+```
+#### Libcap-2.25
+Libcap 软件包实现了可用在 Linux 内核上的对 POSIX 1003.1e 功能的用户空间接口。 这些功能将所有强大 root 权限划分为不同的权限组合。
+Install the package:
+```
+make RAISE_SETFCAP=no lib=lib prefix=/usr install
+chmod -v 755 /usr/lib/libcap.so
+```
+The meaning of the make option:
+`RAISE_SETFCAP=no`
+This parameter skips trying to use setcap on itself. This avoids an installation error if the kernel or file system does not support extended capabilities.
+
+`lib=lib`
+This parameter installs the library in `$prefix/lib` rather than `$prefix/lib64` on `x86_64`. It has no effect on`x86`.
+
+#### Sed-4.4
+The Sed package contains a stream editor.
+First fix an issue in the LFS environment and remove a failing test:
+`sed -i 's/usr/tools/'                 build-aux/help2man`
+`sed -i 's/testsuite.panic-tests.sh//' Makefile.in`
+
+Prepare Sed for compilation:
+`./configure --prefix=/usr --bindir=/bin`
+
+#### Shadow-4.5
+Shadow 软件包包含以安全方式处理密码的程序。
+**注意**
+如果你喜欢强制使用更强的密码，在编译 Shadow 之前可以根据 http://www.linuxfromscratch.org/blfs/view/systemd/postlfs/cracklib.html 安装 `CrackLib`。然后在下面的 configure 命令中增加 `--with-libcrack`。
+
+取消安装 `groups` 程序以及它的 `man` 文档，因为 Coreutils 提供了一个更好的版本：
+```
+sed -i 's/groups$(EXEEXT) //' src/Makefile.in
+find man -name Makefile.in -exec sed -i 's/groups\.1 / /'   {} \;
+find man -name Makefile.in -exec sed -i 's/getspnam\.3 / /' {} \;
+find man -name Makefile.in -exec sed -i 's/passwd\.5 / /'   {} \;
+```
+
+比起默认的 crypt 方法，用更安全的 SHA-512 方法加密密码，它允许密码长度超过 8 个字符。也需要把 Shadow 默认使用的用户邮箱由陈旧的 /var/spool/mail 位置改为正在使用的 /var/mail 位置
+```
+sed -i -e 's@#ENCRYPT_METHOD DES@ENCRYPT_METHOD SHA512@' \
+         -e 's@/var/spool/mail@/var/mail@' etc/login.defs
+```
+**Note**
+如果你选择编译支持 Cracklib 的 Shadow，运行下面的命令：
+`sed -i 's@DICTPATH.*@DICTPATH\t/lib/cracklib/pw_dict@' etc/login.defs`
+
+做个小的改动使 useradd 的默认设置和 LFS 的组文件一致：
+`sed -i 's/1000/999/' etc/useradd`
+
+Prepare Shadow for compilation:
+`./configure --sysconfdir=/etc --with-group-name-max-length=32`
+
+The meaning of the configure option:
+`--with-group-name-max-length=32`
+最长用户名为 32 个字符，使组名称也是如此
+
+##### Configuring Shadow
+该软件包包含增加、更改、以及删除用户和组的工具；设置和修改密码；执行其它特权级任务。软件包解压后的 `doc/HOWTO` 文件有关于 `password` `shadowing` 的完整解释。如果使用 `Shadow` 支持，记住需要验证密码（显示管理器、FTP 程序、pop3 守护进程等）的程序必须和 `Shadow` 兼容。 也就是说，它们要能使用 Shadow 加密的密码。
+
+运行下面的命令启用 shadow 密码；
+`pwconv`
+
+运行下面的命令启用 shadow 组密码：
+`grpconv`
+
+用于 useradd 工具的 Shadow 配置有一些需要解释的注意事项。首先，useradd 工具的默认操作是创建用户以及和用户名相同的组。默认情况下，用户 ID(UID) 和组 ID(GID) 的数字从 1000 开始。这意味着如果你不传递参数给 useradd，系统中的每个用户都会属于一个不同的组。如果不需要这样的结果，你需要传递参数 -g 到 useradd。默认参数保存在 /etc/default/useradd 文件中。你需要修改该文件中的两个参数来实现你的特定需求。
+
+`/etc/default/useradd` 参数解释
+
+`GROUP=1000`
+该参数设定 /etc/group 文件中使用的起始组序号。你可以把它更改为任何你需要的数字。注意 useradd 永远不会重用 UID 或 GID。如果该参数指定的数字已经被使用了，将会使用它之后的下一个可用数字。另外注意如果你系统中没有序号为 1000 的组，第一次使用useradd 而没有参数 -g 的话，你会在终端中看到一个提示信息： useradd: unknown GID 1000。你可以忽视这个信息，它会使用组号 1000。
+
+`CREATE_MAIL_SPOOL=yes`
+这个参数会为 useradd 新添加的用户创建邮箱文件。useradd 会使组 mail 拥有该文件的所有权，并赋予组 0660 的权限。如果你希望 useradd 不创建这些邮箱文件，你可以运行下面的命令：
+`sed -i 's/yes/no/' /etc/default/useradd`
+
+##### 设置 root 密码
+运行下面的命令为用户 root 设置密码：
+`passwd root`
+
+#### (由于构建文档太长,此篇到此结束,还有50多个工具的编译过程没有记录,主要还是要看构建文档)
