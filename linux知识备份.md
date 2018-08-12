@@ -9,6 +9,7 @@ http://repo.archlinux.fr/$arch
 
 之后使用-Sy来更新仓库
 安装downgrade
+
 #### (记录备忘)关于linux下/srv、/var和/tmp的职责区分 ([转载自这儿](https://blog.csdn.net/u012107143/article/details/54972544?utm_source=itdadao&utm_medium=referral))
 `/srv` ：主要用来存储本机或本服务器提供的服务或数据。（用户主动生产的数据、对外提供服务）
 

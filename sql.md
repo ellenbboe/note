@@ -32,3 +32,6 @@ else result
 end new_column_name
 ```
 case when 用在select 语句中，新的字段new_column_name可以用来排序，但是不能用在where中
+
+#### linux下workbanch闪退
+rm -rf .mysql/workbench/
