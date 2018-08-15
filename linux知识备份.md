@@ -37,3 +37,27 @@ Programs must not assume that any files or directories in /tmp are preserved bet
 所以，服务器被用作Web开发时，html文件更应该被放在/srv/www下，而不是/var/www下（因为/srv目录是新标准中才有的，出现较晚；而且Apache将/var/www设为了web默认目录，所以现在绝大多数人都把web文件放在/var/www，这是个历史遗留问题）。
 
 如ftp、流媒体服务等也应该被放在/srv对应的目录下。如果对应目录太大，应该另外挂载分区。
+
+
+### Bumblebee使用控制独显
+
+##### 安装:
+`bumblebee` - 提供守护进程以及程序的主要安装包。
+`mesa` - 开源的 `OpenGL` 标准实现。
+对于合适的NVIDIA驱动。
+`xf86-video-intel` - `Intel` 驱动（可选）。
+对于32位程序 (必须启用Multilib）在64位机器上的支持，安装:
+
+`lib32-virtualgl` - 为32位应用提供的渲染/显示桥。
+`lib32-nvidia-utils` 或者 `lib32-nvidia-340xx-utils`（和64位对应）。
+要使用`Bumblebee`，请确保添加你的用户到 `bumblebee` 组：
+`gpasswd -a user bumblebee`
+并启用(**enable**) `bumblebeed.service`。之后重启系统
+
+可以明显的感受到风扇转速下降
+
+重启之后
+**测试**
+安装 `mesa-demos`并使用 `glxgears` 测试 `Bumblebee` 是否工作：
+`optirun glxgears -info`
+看到有图形出现,并且风扇开始转动,独显开始工作,成功!!
