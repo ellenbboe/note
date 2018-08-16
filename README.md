@@ -1,16 +1,2 @@
-# note
-我的学习笔记,记录我的过程,并写与他人共享^-^
- * arch.note
-  > 关于linux
- * css.note
-  > 关于css
- * shell.note
-  > 关于bash
- * python_shell.note
-  > 关于python
- * vi.note
-  > 关于vi
- * sql.note
-  > 关于sql
- * git.note
-  > 关于git
+# 这是一本笔记本
+![](https://ss1.bdstatic.com/70cFuXSh_Q1YnxGkpoWK1HF6hhy/it/u=1046323792,1086552841&fm=27&gp=0.jpg)
