@@ -28,3 +28,5 @@ An optional list of strings containing domains that this spider is allowed to cr
 Let’s say your target url is `https://www.example.com/1.html`, then add 'example.com' to the list.
 ##### start_urls
 A list of URLs where the spider will begin to crawl from, when no particular URLs are specified. So, the first pages downloaded will be those listed here. The subsequent `Request` will be generated successively from data contained in the start URLs.
+##### custom_settings
+A dictionary of settings that will be overridden from the project wide configuration when running this spider. It must be defined as a class attribute since the settings are updated before instantiation.
