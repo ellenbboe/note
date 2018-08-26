@@ -507,8 +507,441 @@ $ cat .git/config
     remote = origin
     merge = refs/heads/master
 ```
-This is quite literally a clone of bare-repo. The only difference is that this repository contains a few extra lines in .git/config.
+This is quite literally a clone of `bare-repo`. The only difference is that this repository contains a few extra lines in `.git/config`.
 
-First, it contains a remote listing for “origin”, which is the default name given to a repository’s main remote. This tells Git the URL of the repository, and which references it should retrieve when performing a git fetch.
+First, it contains a `remote` listing for “origin”, which is the default name given to a repository’s main remote. This tells Git the URL of the repository, and which references it should retrieve when performing a `git fetch`.
 
-Below that is a branch listing. This is the configuration for a remote-tracking branch. But before we get into that, let’s store some data in the remote repository.
+Below that is a `branch` listing. This is the configuration for a remote-tracking branch. But before we get into that, let’s store some data in the remote repository.
+### Pushing
+We've just cloned a completely empty repository, and we want to start working on it.
+```
+$ echo 'Project v1.0' > README
+$ git add README
+$ git commit -m "Add readme"
+[master (root-commit) 5d591d5] Add readme
+ 1 file changed, 1 insertion(+)
+ create mode 100644 README
+```
+Notice that even though it didn’t technically exist (there was nothing in `.git/refs/heads`), this commit has been made to the master branch. That’s because the HEAD of this repository pointed to master, so Git has gone ahead and created the branch for us.
+```
+$ cat .git/refs/heads/master
+5d591d5fafd538610291f45bec470d1b4e77891e
+```
+Now that we’ve completed some work, we need to share this with our collaborators who have also cloned this repository. Git makes this really easy.
+```
+$ git push origin master
+Counting objects: 3, done.
+Writing objects: 100% (3/3), 231 bytes | 0 bytes/s, done.
+Total 3 (delta 0), reused 0 (delta 0)
+To /home/demo/bare-repo/
+ * [new branch] master -> master
+```
+Notice how we specified both the remote (origin) and the branch (master) that we want Git to push. It is possible to simply run git push, but this can be dangerous and is generally advised against. Running git push without any arguments can (depending on your configuration) push all remote-tracking branches. This is usually okay, but it can result in you pushing changes which you don’t want collaborators to pull. In the worst case, you can destroy other collaborators’ changes if you specify the --force flag.
+
+So, let’s take a look at the remote repository to see what happened.
+```
+$ cd ../bare-repo/
+$ cat refs/heads/master
+5d591d5fafd538610291f45bec470d1b4e77891e
+
+$ git show 5d591d5
+commit 5d591d5fafd538610291f45bec470d1b4e77891e
+Author: Joseph Wynn <joseph@wildlyinaccurate.com>
+Date: Sat May 31 14:08:34 2014 +0100
+
+ Add readme
+
+diff --git a/README b/README
+new file mode 100644
+index 0000000..5cecdfb
+--- /dev/null
++++ b/README
+@@ -0,0 +1 @@
++Project v1.0
+```
+As we expected, the remote repository now contains a master branch which points to the commit that we just created.
+
+Essentially what happened when we ran git push, is Git updated the remote’s references, and sent it any objects required to build those references. In this case, git push updated the remote’s master to point at 5d591d5, and sent it the 5d591d5 commit object as well as any tree and blob objects related to that commit.
+
+### Remote-Tracking Branches
+As we saw in Cloning, a remote-tracking branch is essentially just a few lines in `.git/config`. Let’s take a look at those lines again.
+```
+[branch "master"]
+    remote = origin
+    merge = refs/heads/master
+```
+The line `[branch "master"]` denotes that the following configuration applies to the local master branch.
+
+The rest of the configuration specifies that when this remote-tracking branch is fetched, Git should fetch the master branch from the origin remote.
+
+Besides storing this configuration, Git also stores a local copy of the remote branch. This is simply stored as a reference in .git/refs/remotes/<remote>/<branch>. We’ll see more about how this works in Fetching.
+### Fetching
+The git fetch command is fairly simple. It takes the name of a remote (unless used with the --all flag, which fetches all remotes), and retrieves any new references and all objects necessary to complete them.
+
+Recall what a remote’s configuration looks like.
+```
+[remote "origin"]
+    url = /home/demo/bare-repo/
+    fetch = +refs/heads/*:refs/remotes/origin/*
+```
+The fetch parameter here specifies a mapping of <remote-refs>:<local-refs>. The example above simply states that the references found in origin’s refs/heads/* should be stored locally in refs/remotes/origin/* . We can see this in the repository that we cloned earlier.
+
+```
+$ ls -l .git/refs/remotes/origin/
+total 4
+-rw-rw-r-- 1 demo demo 41 May 31 14:12 master
+```
+Let’s see a fetch in action to get a better idea of what happens. First, we’ll create a new branch on the **remote repository**.
+```
+$ cd ../bare-repo/
+$ git branch feature-branch
+```
+Now we’ll run git fetch from the clone.
+```
+$ cd ../clone-of-bare-repo/
+$ git fetch origin
+From /home/demo/bare-repo
+ * [new branch] feature-branch -> origin/feature-branch
+```
+This has done a couple of things. First, it has created a reference for the remote branch in `.git/refs/remotes/origin`.
+```
+$ cat .git/refs/remotes/origin/feature-branch
+5d591d5fafd538610291f45bec470d1b4e77891e
+```
+It has also updated a special file, `.git/FETCH_HEAD` with some important information. We’ll talk about this file in more detail soon.
+```
+$ cat .git/FETCH_HEAD
+5d591d5fafd538610291f45bec470d1b4e77891e branch 'master' of /home/demo/bare-repo
+5d591d5fafd538610291f45bec470d1b4e77891e not-for-merge branch 'feature-branch' of /home/demo/bare-repo
+```
+What is hasn’t done is created a local branch. This is because Git understands that even though the remote has a feature-branch, you might not want it in your local repository.
+
+But what if we do want a local branch which tracks the remote feature-branch? Git makes this easy. If we run git checkout feature-branch, rather than failing because no local feature-branch exists, Git will see that there is a remote feature-branch available and create a local branch for us.
+```
+$ git checkout feature-branch
+
+Branch feature-branch set up to track remote branch feature-branch from origin.
+Switched to a new branch 'feature-branch'
+```
+Git has done a couple of things for us here. First, it has created a local feature-branch reference which points to the same commit as the remote feature-branch.
+```
+$ cat .git/refs/remotes/origin/feature-branch
+5d591d5fafd538610291f45bec470d1b4e77891e
+$ cat .git/refs/heads/feature-branch
+5d591d5fafd538610291f45bec470d1b4e77891e
+```
+It has also created a remote-tracking branch entry in `.git/config`.
+```
+$ cat .git/config
+[core]
+    repositoryformatversion = 0
+    filemode = true
+    bare = false
+    logallrefupdates = true
+[remote "origin"]
+    url = /home/demo/bare-repo/
+    fetch = +refs/heads/*:refs/remotes/origin/*
+[branch "master"]
+    remote = origin
+    merge = refs/heads/master
+[branch "feature-branch"]
+    remote = origin
+    merge = refs/heads/feature-branch
+```
+### Pulling
+The git pull command is, like git clone, a nice shortcut which essentially just runs a few lower-level commands. In short, with the format git pull <remote> <branch>, the git pull command does the following:
+
+1. Runs git fetch <remote>.
+2. Reads .git/FETCH_HEAD to figure out if <branch> has a remote-tracking branch which should be merged.
+3. Runs git merge if required, otherwise quits with an appropriate message.
+At this point, it helps to understand Git’s `FETCH_HEAD`. Every time you run git fetch, Git stores information about the fetched branches in `.git/FETCH_HEAD`. This is referred to as a short-lived reference, because by default Git will override the contents of `FETCH_HEAD` every time you run git fetch.
+
+Let’s introduce some new commits to our remote repository so that we can see this in practice.
+```
+$ git clone bare-repo/ new-clone-of-bare-repo
+Cloning into 'new-clone-of-bare-repo'...
+done.
+
+$ cd new-clone-of-bare-repo/
+$ git checkout feature-branch
+Branch feature-branch set up to track remote branch feature-branch from origin.
+Switched to a new branch 'feature-branch'
+
+$ echo 'Some more information.' >> README
+$ git commit -am "Add more information to readme"
+[feature-branch 7cd83c2] Add more information to readme
+ 1 file changed, 1 insertion(+)
+$ git push origin feature-branch
+Counting objects: 5, done.
+Writing objects: 100% (3/3), 298 bytes | 0 bytes/s, done.
+Total 3 (delta 0), reused 0 (delta 0)
+To /home/demo/bare-repo/
+   5d591d5..7cd83c2  feature-branch -> feature-branch
+```
+At this point, Git has updated our local copy of the remote branch, and updated the information in `FETCH_HEAD`.
+```
+$ git merge FETCH_HEAD
+Updating 5d591d5..7cd83c2
+Fast-forward
+ README | 1 +
+ 1 file changed, 1 insertion(+)
+```
+And that’s it – we’ve just performed a git pull without actually running git pull. Of course, it is much easier to let Git take care of these details. Just to be sure that the outcome is the same, we can run git pull as well.
+```
+$ git reset --hard HEAD^1
+HEAD is now at 5d591d5 Add readme
+$ git pull origin feature-branch
+From /home/demo/bare-repo
+ * branch            feature-branch -> FETCH_HEAD
+Updating 5d591d5..7cd83c2
+Fast-forward
+ README | 1 +
+ 1 file changed, 1 insertion(+)
+
+```
+### Toolkit
+With a solid understanding of Git’s inner workings, some of the more advanced Git tools start to make more sense.
+#### git-reflog
+Whenever you **make a change** in Git that affects the tip of a branch, Git **records information about that change** in what’s called the reflog. Usually you shouldn’t need to look at these logs, but sometimes they can come in very handy.
+
+Let’s say you have a repository with a few commits.
+```
+$ git log --oneline
+d6f2a84 Add empty LICENSE file
+51c4b49 Add some actual content to readme
+3413f46 Add TODO note to readme
+322c826 Add empty readme
+```
+You decide, for some reason, to perform a destructive action on your master branch.
+```
+$ git reset --hard 3413f46
+```
+HEAD is now at 3413f46 Add TODO note to readme
+Since performing this action, you’ve realised that you lost some commits and you have no idea what their hashes were. You never pushed the changes; they were only in your local repository. git log is no help, since the commits are no longer reachable from HEAD.
+```
+$ git log --oneline
+3413f46 Add TODO note to readme
+322c826 Add empty readme
+```
+This is where git reflog can be useful.
+```
+$ git reflog
+3413f46 HEAD@{0}: reset: moving to 3413f46
+d6f2a84 HEAD@{1}: commit: Add empty LICENSE file
+51c4b49 HEAD@{2}: commit: Add some actual content to readme
+3413f46 HEAD@{3}: commit: Add TODO note to readme
+322c826 HEAD@{4}: commit (initial): Add empty readme
+```
+The reflog shows a list of all changes to HEAD in reverse chronological order. The hash in the first column is the value of HEAD after the action on the right was performed. We can see, therefore, that we were at commit d6f2a84 before the destructive change.
+
+How you want to recover commits depends on the situation. In this particular example, we can simply do a `git reset --hard d6f2a84` to restore HEAD to its original position. However if we have introduced new commits since the destructive change, we may need to do something like cherry-pick all the commits that were lost.
+
+Note that Git’s reflog is only a record of changes for your local repository. If your local repository becomes corrupt or is deleted, the reflog won’t be of any use (if the repository is deleted the reflog won’t exist at all!)
+
+Depending on the situation, you may find git fsck more suitable for recovering lost commits.
+### git-fsck
+In a way, Git’s object storage works like a primitive file system – objects are like files on a hard drive, and their hashes are the objects’ physical address on the disk. The Git index is exactly like the index of a file system, in that it contains references which point at an object’s physical location.
+
+By this analogy, git fsck is aptly named after fsck (“file system check”). This tool is able to check Git’s database and verify the validity and reachability of every object that it finds.
+
+When a reference (like a branch) is deleted from Git’s index, the object(s) they refer to usually aren’t deleted, even if they are no longer reachable by any other references. Using a simple example, we can see this in practice. Here we have a branch, feature-branch, which points at f71bb43. If we delete feature-branch, the commit will no longer be reachable.
+```
+$ git branch
+  feature-branch
+* master
+$ git rev-parse --short feature-branch
+f71bb43
+$ git branch -D feature-branch
+Deleted branch feature-branch (was f71bb43).
+```
+At this point, commit f71bb43 still exists in our repository, but there are no references pointing to it. By searching through the database, git fsck is able to find it.
+```
+$ git fsck --lost-found
+Checking object directories: 100% (256/256), done.
+dangling commit f71bb43907bffe0bce2967504341a0ece7a8cb68
+```
+For simple cases, git reflog may be preferred. Where git fsck excels over git reflog, though, is when you need to find objects which you **never referenced** in your local repository (and therefore would not be in your reflog). An example of this is when you delete a remote branch through an interface like GitHub. Assuming the objects haven’t been garbage-collected, you can clone the remote repository and use git fsck to recover the deleted branch.
+### git-stash
+git stash takes all changes to your working tree and index, and “stashes” them away, giving you a clean working tree. You can then retrieve those changes from your stash and re-apply them to the working tree at any time with git stash apply. A common use for the stash command is to save some half-finished changes in order to checkout another branch.
+
+This seems fairly simple at first, but the mechanism behind the stash command is actually quite complex. Let’s build a simple repository to see how it works.
+```
+$ git init
+Initialised empty Git repository in /home/demo/demo-repo/.git/
+$ echo 'Foo' > test.txt
+$ git add test.txt
+$ git commit -m "Initial commit"
+[master (root-commit) 2522332] Initial commit
+ 1 file changed, 1 insertion(+)
+ create mode 100644 test.txt
+```
+Now let’s make some changes, and stash them.
+```
+$ echo 'Bar' >> test.txt
+$ git stash
+Saved working directory and index state WIP on master: 2522332 Initial commit
+HEAD is now at 2522332 Initial commit
+```
+Stashes in Git are put onto a stack, with the most recently-stashed on top. You can list all current stashes with git stash list.
+```
+$ git stash list
+stash@{0}: WIP on master: 2522332 Initial commit
+```
+Right now we only have one stash: stash@{0}. This is actually a reference, which we can inspect.
+```
+$ git show stash@{0}
+commit f949b46a417a4f1595a9d12773c89cce4454a958
+Merge: 2522332 1fbe1cc
+Author: Joseph Wynn <joseph@wildlyinaccurate.com>
+Date:   Sat Jul 5 00:15:51 2014 +0100
+
+    WIP on master: 2522332 Initial commit
+
+diff --cc test.txt
+index bc56c4d,bc56c4d..3b71d5b
+--- a/test.txt
++++ b/test.txt
+@@@ -1,1 -1,1 +1,2 @@@
+  Foo
+++Bar
+```
+From this we can see that the stash is pointing to a commit object. What’s interesting is that the stash commit is a merge commit. We’ll look into that in a bit, but first: where is this commit?
+```
+$ git log --oneline
+2522332 Initial commit
+
+$ git branch
+* master
+
+$ git fsck --lost-found
+Checking object directories: 100% (256/256), done.
+```
+It’s not in the current branch, and there are no other branches it could be in. `git-fsck` hasn’t found any dangling commits, so it must be referenced somewhere. But where?
+
+The answer is simple: Git creates a special reference for the stash which isn’t seen by commands like git branch and git tag. This reference lives in `.git/refs/stash`. We can verify this with git show-ref.
+```
+$ git show-ref
+25223321ec2fbcb718b7fbf99485f1cb4d2f2042 refs/heads/master
+f949b46a417a4f1595a9d12773c89cce4454a958 refs/stash
+```
+So why does Git create a merge commit for a stash? The answer is relatively simple: as well as recording the state of the working tree, git stash also records the state of the index (also known as the “staging area”). Since it’s possible for the index and the working tree to contain changes to the same file, Git needs to store the states separately.
+### git-describe
+Git’s describe command is summed up pretty neatly in the documentation:
+
+>git-describe - Show the most recent tag that is reachable from a commit
+
+This can be helpful for things like build and release scripts, as well as figuring out which version a change was introduced in.
+
+git describe will take any reference or commit hash, and return the name of the most recent tag. If the tag points at the commit you gave it, git describe will return only the tag name. Otherwise, it will suffix the tag name with some information including the number of commits since the tag and an abbreviation of the commit hash.
+```
+$ git describe v1.2.15
+v1.2.15
+$ git describe 2db66f
+v1.2.15-80-g2db66f5
+```
+If you want to ensure that only the tag name is returned, you can force Git to remove the suffix by passing --abbrev=0.
+```
+$ git describe --abbrev=0 2db66f
+v1.2.15
+```
+### git-rev-parse
+git rev-parse is an ancillary plumbing command which takes a wide range of inputs and returns one or more commit hashes. The most common use case is figuring out which commit a tag or branch points to.
+```
+$ git rev-parse v1.2.15
+2a46f5e2fbe83ccb47a1cd42b81f815f2f36ee9d
+$ git rev-parse --short v1.2.15
+2a46f5e
+```
+### git-bisect
+git bisect is an indispensable tool when you need to figure out which commit introduced a breaking change. The bisect command does a binary search through your commit history to help you find the breaking change as quickly as possible. To get started, simply run git bisect start, and tell Git that the commit you’re currently on is broken with `git bisect bad`. Then, you can give Git a commit that you know is working with git bisect good <commit>.
+```
+$ git bisect start
+$ git bisect bad
+$ git bisect good v1.2.15
+Bisecting: 41 revisions left to test after this (roughly 5 steps)
+[b87713687ecaa7a873eeb3b83952ebf95afdd853] docs(misc/index): add header; general links
+```
+Git will then checkout a commit and ask you to test whether it’s broken or not. If the commit is broken, run git bisect bad. If the commit is fine, run git bisect good. After doing this a few times, Git will be able to pinpoint the commit which first introduced the breaking change.
+```
+$ git bisect bad
+e145a8df72f309d5fb80eaa6469a6148b532c821 is the first bad commit
+```
+Once the bisect is finished (or when you want to abort it), be sure to run `git bisect reset` to reset HEAD to where it was before the bisect.
+
+### Useful commands
+#### Find which commit a reference points at
+```
+$ git rev-parse HEAD
+0f64e9e759c904553309858070f444e5e64847c4
+
+$ git rev-parse --short HEAD
+0f64e9e
+```
+#### Find which branches a commit is in
+```
+$ git branch --contains HEAD
+  master
+* other-branch
+```
+#### Find commits that are in one branch but not another
+```
+$ git log --oneline --right-only master...hotfix-1
+
+0f64e9e Apply hotfix patch from #2914 to hotfix-1
+bc3bff5 [Cherry-pick] Fix issue #2926
+```
+#### Exclude commits that were cherry-picked
+```
+$ git log --oneline --cherry-pick --right-only master...hotfix-1
+
+0f64e9e Apply hotfix patch from #2914 to hotfix-1
+```
+#### View details of an object
+```
+$ git cat-file -p HEAD
+tree af22d0482b89640c95986f3b4663026bcb7f764b
+parent bc3bff555f573ac76f0d3e71f0e54d63f50b8434
+author Foo Bar <foo@bar.com> 1436294582 +0100
+committer Foo Bar <foo@bar.com> 1436294582 +0100
+
+Lorem ipsum dolor sit amet, consectetur adipiscing elit
+```
+#### Show an object’s type
+```
+$ git cat-file -t HEAD
+commit
+```
+#### Show an object’s size
+```
+$ git cat-file -s HEAD
+253
+```
+#### Print the tree of a given reference
+```
+$ git ls-tree -t -r HEAD
+100644 blob 59e004af21a725c9b378001a1b231967f955b992    .gitignore
+100644 blob 9f5d366d261317d8ff881ee2945ef2c7960fa2ea    .travis.yml
+100644 blob 148fc67781eba8c08bbb4db1fc9e92b9781ec28d    LICENSE
+100644 blob 4a2727bb9afae5782510e7ce764608540dd7c04a    Makefile
+100644 blob b07b8d5f39d6f62a18a1b0791f33a784ec34556e    README.md
+100644 blob 9a994af677b0dfd41b4e3b76b3e7e604003d64e1    Setup.hs
+100644 blob 66820894ca2c16725e8527e16785f2eebd89871a    lishp.cabal
+040000 tree eda8357ddb73fa384f283291bac84d7fe1bce436    src
+040000 tree 6a84cb52f17c7e1ff691fe45f4c70df5269bdab0    src/Lishp
+100644 blob 1f7677ed0c7f3e713c7e6a16d94cc3db89d911cd    src/Lishp/Interpreter.hs
+100644 blob 1a0fe9394bc2d7789d783a467626301204de700a    src/Lishp/Primitives.hs
+100644 blob caf0fcf1cd265436efbaa6cc39338e653197a3ee    src/Lishp/Readline.hs
+100644 blob 92cf693d29169066356bed3f1ae794a624db49a5    src/Lishp/Types.hs
+100644 blob 82ec4d14e01598f38a083ab2dea326615cd048dd    src/Main.hs
+040000 tree ba0974cba2e671b840bb3cefa69569f62cec29b5    test
+100644 blob 2589b7aeb1562a3aa951c2fa52f64891db87d1c6    test/assignment.sh
+100644 blob d54fa0437e13ba5ee15ad13330ac07b9a6abcdcc    test/equality.sh
+100644 blob ee61aa5dffca43032b5aeef6f4e79ff1f9f2df85    test/functions.sh
+100644 blob 22fbec9189d2641c590836c4bb19431d3c6d3df3    test/primitives.sh
+100644 blob c455f01b3d88b5d510ff4ebb50e93c5d7f8f0b26    test/types.sh
+```
+#### Find the first tag that contains a reference
+```
+$ git describe HEAD
+v1.6.1
+```
