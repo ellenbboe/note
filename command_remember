@@ -1,2 +1,4 @@
 base64 -d
 base64
+sort -t ":"(分隔符) -k 2(第几列) -n(按照数字) -r(倒序) temp
+sort -n -r file
