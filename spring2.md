@@ -555,3 +555,4 @@ Bean 定义模板
 在使用初始化和摧毁的函数的时候可以使用初始化和摧毁的接口
 不调用`context.registerShutdownHook();` 似乎摧毁的函数出不来
 BeanPostProcessor 似乎是自动调用的,在当要初始化一个bean和初始化完成后的时候,  
+id 是用来在mainapp里面get bean的
