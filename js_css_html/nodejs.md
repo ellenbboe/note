@@ -17,3 +17,4 @@ app.listen(3000, function () {
   console.log('app is listening at port 3000');
 });
 ```
+我tm ..... res.on('end',function(){}) 之前要写res.on('data',function(){})  md
