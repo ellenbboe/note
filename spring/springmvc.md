@@ -55,21 +55,52 @@
 
 ### web.xml
 ```xml
-<servlet>
+<?xml version="1.0" encoding="UTF-8"?>
 
-    <servlet-name>index</servlet-name>//与下面的对应就好了
+<web-app xmlns="http://java.sun.com/xml/ns/javaee"
+          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd " version="2.5">
+  <display-name>Archetype Created Web Application</display-name>
+  <servlet>
+
+    <servlet-name>mvc</servlet-name>
     <servlet-class>org.springframework.web.servlet.DispatcherServlet</servlet-class>
     <init-param>
       <param-name>contextConfigLocation</param-name>
-      <param-value>classpath:index-dispatcher-servlet.xml</param-value>//放在resources里面
+      <param-value>classpath:mvc.xml</param-value>
     </init-param>
     <load-on-startup>1</load-on-startup>
 
   </servlet>
-    <servlet-mapping>
-    <servlet-name>index</servlet-name>
+  <servlet-mapping>
+    <servlet-name>mvc</servlet-name>
     <url-pattern>/</url-pattern>
   </servlet-mapping>
+  <filter>
+        <filter-name>characterEncodingFilter</filter-name>
+        <filter-class>org.springframework.web.filter.CharacterEncodingFilter</filter-class>
+        <init-param>
+            <!--要使用的字符集，一般我们使用UTF-8(保险起见UTF-8最好)-->
+            <param-name>encoding</param-name>
+            <param-value>UTF-8</param-value>
+        </init-param>
+        <init-param>
+            <!--是否强制设置request的编码为encoding，默认false，不建议更改-->
+            <param-name>forceRequestEncoding</param-name>
+            <param-value>false</param-value>
+        </init-param>
+        <init-param>
+            <!--是否强制设置response的编码为encoding，建议设置为true，下面有关于这个参数的解释-->
+            <param-name>forceResponseEncoding</param-name>
+            <param-value>true</param-value>
+        </init-param>
+    </filter>
+    <filter-mapping>
+        <filter-name>characterEncodingFilter</filter-name>
+        <!--这里不能留空或者直接写 ' / ' ，否者不起作用-->
+        <url-pattern>/*</url-pattern>
+    </filter-mapping>
+</web-app>
 ```
 ### spring的xml文件(一般是-servelt.xml)
 ```xml
