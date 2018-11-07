@@ -47,6 +47,16 @@
       <artifactId>spring-beans</artifactId>
       <version>5.0.9.RELEASE</version>
     </dependency>
+    <dependency>
+      <groupId>javax.servlet</groupId>
+      <artifactId>javax.servlet-api</artifactId>
+      <version>3.1.0</version>
+    </dependency>
+    <dependency>
+      <groupId>commons-fileupload</groupId>
+      <artifactId>commons-fileupload</artifactId>
+      <version>1.3.1</version>
+    </dependency>
   </dependencies>
 ```
 我的问题:由于没有配置好依赖,一直报500错误
