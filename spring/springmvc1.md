@@ -54,3 +54,22 @@ public class HiController {
     </servlet-mapping>
 ```
 这样似乎就不用在地址栏里面写上后缀了
+
+
+
+可以使用 HttpServletRequest, HttpServletResponse 在控制器的方法中。
+
+使用前缀 "redirect:" ，该方法返回字符串，可以重定向到另一页面。`return "redirect:/hello";`
+
+(url 携带参数)
+使用@RequestParam 注解将请求参数绑定到你的控制器方法参数。
+@RequestParam(value = "name", defaultValue = "Guest") String name
+
+(url 路径成为参数)
+在Spring MVC中，可以使用@PathVariable注释将一个方法参数绑定到一个URI模板变量的值：
+例如，这是一个模板的URI：
+/web/fe/{sitePrefix}/{language}/document/{id}/{naturalText}
+
+(直接将值返回)
+如果您使用 @ResponseBody 注释到方法， spring 将尝试转换它的返回值，并自动写入到HTTP响应。在这种情况下，并不需要一个特定的视图。
+注：方法不一定需要返回字符串类型。

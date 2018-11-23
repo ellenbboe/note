@@ -94,6 +94,8 @@ web.xml
 
 </web-app>
 
+
+假如是java的配置的话,删掉web.xml就好了
 ```
 
 ### jsp 显示中文乱码

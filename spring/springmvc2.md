@@ -1,0 +1,5 @@
+
+前端控制器(相当于spring的xml文件)
+Initializer java文件
+
+`Initializer extends AbstractAnnotationConfigDispatcherServletInitializer`
